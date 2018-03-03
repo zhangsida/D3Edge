@@ -1,5 +1,10 @@
 // Typical D3 example https://gist.github.com/mbostock/3885304
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
+var margin = {
+        top: 20,
+        right: 20,
+        bottom: 30,
+        left: 40
+    },
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
@@ -26,14 +31,18 @@ var svg = d3.select("#figure").append("svg")
     .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-d3.tsv("../../../data/data.tsv", function(error, data) {
+d3.tsv("../../../data/data.tsv", function (error, data) {
 
-    data.forEach(function(d) {
+    data.forEach(function (d) {
         d.frequency = +d.frequency;
     });
 
-    x.domain(data.map(function(d) { return d.letter; }));
-    y.domain([0, d3.max(data, function(d) { return d.frequency; })]);
+    x.domain(data.map(function (d) {
+        return d.letter;
+    }));
+    y.domain([0, d3.max(data, function (d) {
+        return d.frequency;
+    })]);
 
     svg.append("g")
         .attr("class", "x axis")
@@ -54,8 +63,14 @@ d3.tsv("../../../data/data.tsv", function(error, data) {
         .data(data)
         .enter().append("rect")
         .attr("class", "bar")
-        .attr("x", function(d) { return x(d.letter); })
+        .attr("x", function (d) {
+            return x(d.letter);
+        })
         .attr("width", x.rangeBand())
-        .attr("y", function(d) { return y(d.frequency); })
-        .attr("height", function(d) { return height - y(d.frequency); });
+        .attr("y", function (d) {
+            return y(d.frequency);
+        })
+        .attr("height", function (d) {
+            return height - y(d.frequency);
+        });
 });
