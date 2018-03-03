@@ -9,4 +9,6 @@ simply launch a web server `python -m SimpleHTTPServer 8000` on a mac. Then, you
 navigate to http://localhost:8000 in your browser and explore both the demo applications
 for each chapter, and the code snippets. 
 
+On windows 7 and the current python version needed: python -m http.server 8000
+
 
