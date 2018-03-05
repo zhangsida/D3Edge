@@ -4,34 +4,60 @@
 d3.custom = {};
 
 d3.custom.barChart = function module() {
-    var margin = {top: 20, right: 20, bottom: 40, left: 40},
-        width = 500,
-        height = 500,
-        gap = 0,
-        ease = "bounce";
     var svg;
 
     var dispatch = d3.dispatch("customHover");
-    function exports(_selection) {
-        _selection.each(function(_data) {
-            var chartW = width - margin.left - margin.right,
-                chartH = height - margin.top - margin.bottom;
+
+    function exports(_chartdata) {
+
+        if (_chartdata === undefined) {
+            _chartdata = {};
+        }
+        var value = function (_default, _x) {
+            return _x === undefined ? _default : _x;
+        };
+
+        var chartdata = {
+            containter: value('#figure', _chartdata.containter),
+            dataset: value([], _chartdata.dataset),
+            fontSize: value(10, _chartdata.fontSize),
+            fontColor: value('black', _chartdata.fontColor),
+            width: value(500, _chartdata.width),
+            height: value(500, _chartdata.height),
+            gap: value(0, _chartdata.gap),
+            ease: value('bounce', _chartdata.ease),
+            margin: {
+                top: 20,
+                right: 20,
+                bottom: 40,
+                left: 40
+            }
+        };
+        var chartW =  chartdata.width - chartdata.margin.left - chartdata.margin.right;
+        var chartH = chartdata.height - chartdata.margin.top - chartdata.margin.bottom;
+        var _selection = d3.select(chartdata.containter).datum(chartdata.dataset);
+        // So it can loop through this selection with d3.each
+        _selection.each(function (_data) {
 
             var x1 = d3.scale.ordinal()
-                    .domain(_data.map(function(d, i) { return i; }))
-                    .rangeRoundBands([0, chartW], 0.1);
+                .domain(_data.map(function (d, i) {
+                    return i;
+                }))
+                .rangeRoundBands([0, chartW], 0.1);
 
             var y1 = d3.scale.linear()
-                    .domain([0, d3.max(_data, function(d, i) { return d; })])
-                    .range([chartH, 0]);
+                .domain([0, d3.max(_data, function (d, i) {
+                    return d;
+                })])
+                .range([chartH, 0]);
 
             var xAxis = d3.svg.axis()
-                    .scale(x1)
-                    .orient("bottom");
+                .scale(x1)
+                .orient("bottom");
 
             var yAxis = d3.svg.axis()
-                    .scale(y1)
-                    .orient("left");
+                .scale(y1)
+                .orient("left");
 
             var barW = chartW / _data.length;
 
@@ -45,65 +71,65 @@ d3.custom.barChart = function module() {
                 container.append("g").classed("y-axis-group axis", true);
             }
 
-            svg.transition().attr({width: width, height: height});
+            svg.transition().attr({
+                width: chartdata.width,
+                height: chartdata.height
+            });
             svg.select(".container-group")
-                .attr({transform: "translate(" + margin.left + "," + margin.top + ")"});
+                .attr({
+                    transform: "translate(" + chartdata.margin.left + "," + chartdata.margin.top + ")"
+                });
 
             svg.select(".x-axis-group.axis")
                 .transition()
-                .ease(ease)
-                .attr({transform: "translate(0," + (chartH) + ")"})
+                .ease(chartdata.ease)
+                .attr({
+                    transform: "translate(0," + (chartH) + ")"
+                })
                 .call(xAxis);
 
             svg.select(".y-axis-group.axis")
                 .transition()
-                .ease(ease)
+                .ease(chartdata.ease)
                 .call(yAxis);
 
-            var gapSize = x1.rangeBand() / 100 * gap;
+            var gapSize = x1.rangeBand() / 100 * chartdata.gap;
             var barW = x1.rangeBand() - gapSize;
             var bars = svg.select(".chart-group")
-                    .selectAll(".bar")
-                    .data(_data);
+                .selectAll(".bar")
+                .data(_data);
             bars.enter().append("rect")
                 .classed("bar", true)
-                .attr({x: chartW,
+                .attr({
+                    x: chartW,
                     width: barW,
-                    y: function(d, i) { return y1(d); },
-                    height: function(d, i) { return chartH - y1(d); }
+                    y: function (d, i) {
+                        return y1(d);
+                    },
+                    height: function (d, i) {
+                        return chartH - y1(d);
+                    }
                 })
                 .on("mouseover", dispatch.customHover);
             bars.transition()
-                .ease(ease)
+                .ease(chartdata.ease)
                 .attr({
                     width: barW,
-                    x: function(d, i) { return x1(i) + gapSize / 2; },
-                    y: function(d, i) { return y1(d); },
-                    height: function(d, i) { return chartH - y1(d); }
+                    x: function (d, i) {
+                        return x1(i) + gapSize / 2;
+                    },
+                    y: function (d, i) {
+                        return y1(d);
+                    },
+                    height: function (d, i) {
+                        return chartH - y1(d);
+                    }
                 });
-            bars.exit().transition().style({opacity: 0}).remove();
+            bars.exit().transition().style({
+                opacity: 0
+            }).remove();
         });
     }
-    exports.width = function(_x) {
-        if (!arguments.length) return width;
-        width = parseInt(_x);
-        return this;
-    };
-    exports.height = function(_x) {
-        if (!arguments.length) return height;
-        height = parseInt(_x);
-        return this;
-    };
-    exports.gap = function(_x) {
-        if (!arguments.length) return gap;
-        gap = _x;
-        return this;
-    };
-    exports.ease = function(_x) {
-        if (!arguments.length) return ease;
-        ease = _x;
-        return this;
-    };
     d3.rebind(exports, dispatch, "on");
     return exports;
 };
@@ -115,13 +141,14 @@ var chart = d3.custom.barChart();
 
 function update() {
     var data = randomDataset();
-    d3.select("#figure")
-        .datum(data)
-        .call(chart);
+    var chartdata = {
+        dataset: data
+    };
+    chart(chartdata)
 }
 
 function randomDataset() {
-    return d3.range(~~(Math.random() * 50)).map(function(d, i) {
+    return d3.range(~~(Math.random() * 50)).map(function (d, i) {
         return ~~(Math.random() * 1000);
     });
 }

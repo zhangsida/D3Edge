@@ -63,11 +63,13 @@
 
       var chart = d3.edge.barChart();
 
-      function update(){
-          var data = randomDataset();
-          d3.select('#container')
-              .datum(data)
-              .call(chart);
+      function update() {
+        var data = randomDataset();
+        var chartdata = {
+          container: '#container',
+          dataset: data
+        };
+        chart(chartdata)
       }
 
       function randomDataset(){
