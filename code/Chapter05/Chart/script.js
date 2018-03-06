@@ -4,27 +4,18 @@
 d3.edge = {};
 
 d3.edge.barChart = function module() {
-    var svg;
-
-    var dispatch = d3.dispatch("customHover");
-
-    function exports(_chartdata) {
-        if (_chartdata === undefined) {
-            _chartdata = {};
-        }
-        var value = function (_default, _x) {
-            return _x === undefined ? _default : _x;
-        };
-
-        var chartdata = {
-            containter: value('#figure', _chartdata.container),
-            dataset: value([], _chartdata.dataset),
-            fontSize: value(10, _chartdata.fontSize),
-            fontColor: value('black', _chartdata.fontColor),
-            width: value(500, _chartdata.width),
-            height: value(500, _chartdata.height),
-            gap: value(0, _chartdata.gap),
-            ease: value('bounce', _chartdata.ease),
+    var exports = {},
+        svg,
+        dispatch = d3.dispatch("customHover"),
+        chartdata = {
+            container: '#figure',
+            dataset: [],
+            fontSize: 10,
+            fontColor: 'black',
+            width: 500,
+            height: 500,
+            gap: 0,
+            ease: 'bounce',
             margin: {
                 top: 20,
                 right: 20,
@@ -32,9 +23,17 @@ d3.edge.barChart = function module() {
                 left: 40
             }
         };
-        var chartW =  chartdata.width - chartdata.margin.left - chartdata.margin.right;
+    exports.chartdata = function (_chartdata) {
+        if (!arguments.length) return chartdata;
+        for (var key in chartdata)
+            chartdata[key] = key in _chartdata && _chartdata[key] || chartdata[key];
+        return this;
+    };
+
+    exports.draw = function () {
+        var chartW = chartdata.width - chartdata.margin.left - chartdata.margin.right;
         var chartH = chartdata.height - chartdata.margin.top - chartdata.margin.bottom;
-        var _selection = d3.select(chartdata.containter).datum(chartdata.dataset);
+        var _selection = d3.select(chartdata.container).datum(chartdata.dataset);
         // So it can loop through this selection with d3.each
         _selection.each(function (_data) {
 
@@ -129,6 +128,6 @@ d3.edge.barChart = function module() {
             }).remove();
         });
     }
-    d3.rebind(exports, dispatch, "on");
+    d3.rebind(exports.draw, dispatch, "on");
     return exports;
 };
