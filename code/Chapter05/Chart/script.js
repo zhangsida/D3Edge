@@ -21,18 +21,20 @@ d3.edge.barChart = function module() {
                 right: 20,
                 bottom: 40,
                 left: 40
-            }
+            },
+            chartW: function(){return this.width - this.margin.left - this.margin.right;},
+            chartH: function(){return this.height - this.margin.top - this.margin.bottom;}
         };
     exports.chartdata = function (_chartdata) {
         if (!arguments.length) return chartdata;
         for (var key in chartdata)
             chartdata[key] = key in _chartdata && _chartdata[key] || chartdata[key];
+        console.log(this);
         return this;
     };
 
     exports.draw = function () {
-        var chartW = chartdata.width - chartdata.margin.left - chartdata.margin.right;
-        var chartH = chartdata.height - chartdata.margin.top - chartdata.margin.bottom;
+
         var _selection = d3.select(chartdata.container).datum(chartdata.dataset);
         // So it can loop through this selection with d3.each
         _selection.each(function (_data) {
@@ -41,13 +43,13 @@ d3.edge.barChart = function module() {
                 .domain(_data.map(function (d, i) {
                     return i;
                 }))
-                .rangeRoundBands([0, chartW], 0.1);
+                .rangeRoundBands([0, chartdata.chartW()], 0.1);
 
             var y1 = d3.scale.linear()
                 .domain([0, d3.max(_data, function (d, i) {
                     return d;
                 })])
-                .range([chartH, 0]);
+                .range([chartdata.chartH(), 0]);
 
             var xAxis = d3.svg.axis()
                 .scale(x1)
@@ -57,7 +59,7 @@ d3.edge.barChart = function module() {
                 .scale(y1)
                 .orient("left");
 
-            var barW = chartW / _data.length;
+            var barW = chartdata.chartW() / _data.length;
 
             if (!svg) {
                 svg = d3.select(this)
@@ -82,7 +84,7 @@ d3.edge.barChart = function module() {
                 .transition()
                 .ease(chartdata.ease)
                 .attr({
-                    transform: "translate(0," + (chartH) + ")"
+                    transform: "translate(0," + (chartdata.chartH()) + ")"
                 })
                 .call(xAxis);
 
@@ -99,13 +101,13 @@ d3.edge.barChart = function module() {
             bars.enter().append("rect")
                 .classed("bar", true)
                 .attr({
-                    x: chartW,
+                    x: chartdata.chartW(),
                     width: barW,
                     y: function (d, i) {
                         return y1(d);
                     },
                     height: function (d, i) {
-                        return chartH - y1(d);
+                        return chartdata.chartH() - y1(d);
                     }
                 })
                 .on("mouseover", dispatch.customHover);
@@ -120,7 +122,7 @@ d3.edge.barChart = function module() {
                         return y1(d);
                     },
                     height: function (d, i) {
-                        return chartH - y1(d);
+                        return chartdata.chartH() - y1(d);
                     }
                 });
             bars.exit().transition().style({

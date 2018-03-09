@@ -1,3 +1,144 @@
+'use strict';
+(function (root, factory) {
+  root.D3Edge = factory(root);
+}(window, function (win) {
+  var D3Edge = (function () {
+    var glob = typeof win === 'undefined' ? window : win,
+      doc = glob.document,
+      SVG_NS = 'http://www.w3.org/2000/svg',
+      userAgent = (glob.navigator && glob.navigator.userAgent) || '',
+      svg = (
+        doc &&
+        doc.createElementNS &&
+        !!doc.createElementNS(SVG_NS, 'svg').createSVGRect
+      ),
+      isMS = /(edge|msie|trident)/i.test(userAgent) && !glob.opera,
+      isFirefox = userAgent.indexOf('Firefox') !== -1,
+      isChrome = userAgent.indexOf('Chrome') !== -1;
+
+    var D3Edge = {
+      product: 'D3Edge',
+      version: '0.0.0',
+      deg2rad: Math.PI * 2 / 360,
+      doc: doc,
+      hasTouch: doc && doc.documentElement.ontouchstart !== undefined,
+      isMS: isMS,
+      isWebKit: userAgent.indexOf('AppleWebKit') !== -1,
+      isFirefox: isFirefox,
+      isChrome: isChrome,
+      isSafari: !isChrome && userAgent.indexOf('Safari') !== -1,
+      isTouchDevice: /(Mobile|Android|Windows Phone)/.test(userAgent),
+      SVG_NS: SVG_NS,
+      chartCount: 0,
+      seriesTypes: {},
+      symbolSizes: {},
+      svg: svg,
+      win: glob,
+      noop: function () {
+        return undefined;
+      }
+    };
+    return D3Edge;
+  }());
+  (function (D3Edge) {
+    var D = D3Edge;
+    D.dispatch = d3.dispatch('geoReady', 'dataReady', 'dataLoading', 'hover', 'stopsEnd', 'routesEnd', 'brushing');
+
+    var data,
+      t,
+      s,
+      svg,
+      brush,
+      chartdata = {
+        container: '#zurich_map',
+        width: 570,
+        height: 500,
+        center: [8.5390, 47.3687],
+        scale: 900000,
+        size: function () {
+          return [this.width, this.height];
+        }
+      };
+
+    D.svg = (function () {
+      var _selection = d3.select(chartdata.container)
+        .append('svg')
+        .attr('width', chartdata.width)
+        .attr('height', chartdata.height);
+      //Set svg equal to the selection that invokes this module.
+      svg = svg || _selection;
+
+      //Bind an empty datum to the selection. Usefull later for zooming.
+      svg.datum([]);
+      return svg;
+    }());
+
+    D.projection = d3.geo.mercator()
+      .scale(chartdata.scale)
+      .center(chartdata.center)
+      .translate([chartdata.width / 2, chartdata.height / 2]);
+
+    D.path = d3.geo.path()
+      .projection(D.projection);
+
+  }(D3Edge));
+  (function (D3Edge) {
+    var D = D3Edge,
+      svg = D.svg,
+      dispatch = D.dispatch,
+      path = D.path;
+    //Create a drawRoutes method that can be invoked to create routes for each city.
+    D.drawRoutes = function (_data) {
+      svg.append('path')
+        .attr('class', 'route')
+        .datum(topojson.object(_data, _data.objects.routes))
+        .attr('d', function (d, i) {
+          return path(d);
+        });
+
+      //Dispatch our routesEnd event so we know with the routes visualization is complete.
+      dispatch.routesEnd();
+    };
+
+    D.drawStops = function (_data) {
+      svg.selectAll('.stop')
+        .data(_data.features)
+        .enter().append('circle')
+        .attr('cx', function (d) {
+          return D.projection(d.geometry.coordinates)[0];
+        })
+        .attr('cy', function (d) {
+          return D.projection(d.geometry.coordinates)[1];
+        })
+        .attr('r', 2)
+        .attr('class', 'stop')
+        .on('mouseover', dispatch.hover);
+
+      //Dispatch our stopsEnd event so we know with the stops visualization is complete.
+      dispatch.stopsEnd();
+    };
+    d3.rebind(D, dispatch, 'on');
+
+  }(D3Edge));
+  (function (D3Edge) {
+    var D = D3Edge,
+      drawStops = D.drawStops,
+      drawRoutes = D.drawRoutes;
+
+    //Create a method to load the geojson file, and execute a custom callback on response.
+    D.loadGeoJson = function (_file) {
+      //Load json file using d3.json.
+      d3.json(_file, function (_err, _data) {
+        //Execute the callback, assign the data to the context.
+        // drawRoutes(_data);
+        drawStops(_data);
+      });
+    };
+    //Bind our custom events to the 'on' method of our function.
+  }(D3Edge));
+  return D3Edge;
+}));
+
 //Define the namespace for our API.
 var d3Edge = {};
 
@@ -149,4 +290,5 @@ d3.select('#zurich_map')
     .call(zurichMap);
 
 //Load the stops data and pass our drawStops method as the callback to be executed once the data loads.
-zurichDataManager.loadGeoJson('../../../data/zurich/stops_geo.json', zurichMap.drawStops);
+// zurichDataManager.loadGeoJson('../../../data/zurich/stops_geo.json', zurichMap.drawStops);
+D3Edge.loadGeoJson('../../../data/zurich/stops_geo.json');
